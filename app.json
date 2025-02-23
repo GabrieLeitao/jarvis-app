@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "HelloWorld",
-    "slug": "expo-template-default",
+    "name": "Jarvis",
+    "slug": "jarvis-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,13 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ozipperorg.jarvisapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.ozipperorg.jarvisapp"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +38,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ed03a553-7e93-4aa5-957e-a38d4de776a5"
+      }
+    },
+    "owner": "ozipper-org",
+    "updates": {
+      "url": "https://u.expo.dev/ed03a553-7e93-4aa5-957e-a38d4de776a5"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
