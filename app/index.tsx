@@ -1,6 +1,7 @@
 import { Picker } from '@react-native-picker/picker';
+import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from "react";
-import { Button, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import userInfo from '../data/userInfo.json';
 
 export default function Index() {
@@ -8,10 +9,13 @@ export default function Index() {
     name: string;
     email: string;
     birthdate: string;
-    events: { id: number; title: string; date: string; time: string; }[];
+    events: { id: number; title: string; date: string; time: string; reminder: string; recurring: string; }[];
   } | null>(null);
   const [view, setView] = useState<'day' | 'week' | 'month' | 'year'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', reminder: '', recurring: '' });
+  const [editEvent, setEditEvent] = useState<{ id: number; title: string; date: string; time: string; reminder: string; recurring: string; } | null>(null);
 
   useEffect(() => {
     // Simulate fetching user data
@@ -56,6 +60,72 @@ export default function Index() {
     setCurrentDate(newDate);
   };
 
+  const handleAddEvent = async () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        events: [
+          ...user.events,
+          {
+            id: user.events.length + 1,
+            title: newEvent.title,
+            date: newEvent.date,
+            time: newEvent.time,
+            reminder: newEvent.reminder,
+            recurring: newEvent.recurring,
+          },
+        ],
+      };
+      setUser(updatedUser);
+      setModalVisible(false);
+      setNewEvent({ title: '', date: '', time: '', reminder: '', recurring: '' });
+
+      // Save to JSON file
+      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+      try {
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Error saving event:', error);
+      }
+    }
+  };
+
+  const handleEditEvent = async () => {
+    if (user && editEvent) {
+      const updatedEvents = user.events.map(event =>
+        event.id === editEvent.id ? editEvent : event
+      );
+      const updatedUser = { ...user, events: updatedEvents };
+      setUser(updatedUser);
+      setModalVisible(false);
+      setEditEvent(null);
+
+      // Save to JSON file
+      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+      try {
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Error saving event:', error);
+      }
+    }
+  };
+
+  const handleDeleteEvent = async (id: number) => {
+    if (user) {
+      const updatedEvents = user.events.filter(event => event.id !== id);
+      const updatedUser = { ...user, events: updatedEvents };
+      setUser(updatedUser);
+
+      // Save to JSON file
+      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+      try {
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    }
+  };
+
   const renderHour = (hour: number) => (
     <View style={styles.hour}>
       <Text style={styles.hourText}>{hour}:00</Text>
@@ -72,8 +142,11 @@ export default function Index() {
         {Array.from({ length: 24 }, (_, i) => (
           <View key={i} style={styles.hour}>
             <Text style={styles.hourText}>{i}:00</Text>
-            {events.filter(event => new Date(event.time).getHours() === i).map(event => (
-              <Text key={event.id} style={styles.eventText}>{event.title}</Text>
+            {events.filter(event => new Date(`1970-01-01T${event.time}`).getHours() === i).map(event => (
+              <TouchableOpacity key={event.id} style={styles.event} onPress={() => setEditEvent(event)}>
+                <Text style={styles.eventText}>{event.title}</Text>
+                <Button title="Delete" onPress={() => handleDeleteEvent(event.id)} />
+              </TouchableOpacity>
             ))}
           </View>
         ))}
@@ -137,6 +210,7 @@ export default function Index() {
           <Button title=">" onPress={handleNext} />
         </View>
       </View>
+      <Button title="Add Event" onPress={() => setModalVisible(true)} />
       {view === 'week' && (
         <>
           <Text style={styles.weekRangeText}>
@@ -194,6 +268,48 @@ export default function Index() {
           </>
         )}
       </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>{editEvent ? 'Edit Event' : 'Add New Event'}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Title"
+            value={editEvent ? editEvent.title : newEvent.title}
+            onChangeText={(text) => editEvent ? setEditEvent({ ...editEvent, title: text }) : setNewEvent({ ...newEvent, title: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Date (YYYY-MM-DD)"
+            value={editEvent ? editEvent.date : newEvent.date}
+            onChangeText={(text) => editEvent ? setEditEvent({ ...editEvent, date: text }) : setNewEvent({ ...newEvent, date: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Time (HH:MM AM/PM)"
+            value={editEvent ? editEvent.time : newEvent.time}
+            onChangeText={(text) => editEvent ? setEditEvent({ ...editEvent, time: text }) : setNewEvent({ ...newEvent, time: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Reminder (e.g., 10 minutes before)"
+            value={editEvent ? editEvent.reminder : newEvent.reminder}
+            onChangeText={(text) => editEvent ? setEditEvent({ ...editEvent, reminder: text }) : setNewEvent({ ...newEvent, reminder: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Recurring (e.g., daily, weekly)"
+            value={editEvent ? editEvent.recurring : newEvent.recurring}
+            onChangeText={(text) => editEvent ? setEditEvent({ ...editEvent, recurring: text }) : setNewEvent({ ...newEvent, recurring: text })}
+          />
+          <Button title={editEvent ? 'Save Changes' : 'Add Event'} onPress={editEvent ? handleEditEvent : handleAddEvent} />
+          <Button title="Cancel" onPress={() => { setModalVisible(false); setEditEvent(null); }} />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -257,9 +373,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
   },
+  event: {
+    backgroundColor: '#ff6347',
+    borderRadius: 5,
+    padding: 5,
+    marginVertical: 2,
+  },
   eventText: {
     fontSize: 12,
-    color: '#ff6347',
+    color: '#fff',
   },
   dayViewContainer: {
     flex: 1,
@@ -307,5 +429,34 @@ const styles = StyleSheet.create({
   userInfoText: {
     fontSize: 18,
     marginBottom: 10,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    width: '100%',
   },
 });
