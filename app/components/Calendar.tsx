@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { CalendarList } from 'react-native-calendars';
+import { LayoutChangeEvent, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { styles } from '../styles';
 
 interface Event {
@@ -30,6 +29,7 @@ export default function Calendar({ user, view, currentDate, darkMode, setEditEve
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentDateState, setCurrentDate] = useState(currentDate);
   const [hourBlockHeight, setHourBlockHeight] = useState(50); // Default value
+  const { width: screenWidth } = useWindowDimensions();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,6 +46,7 @@ export default function Calendar({ user, view, currentDate, darkMode, setEditEve
   const renderHour = (hour: number) => (
     <View style={styles.hour} onLayout={onHourLayout}>
       <Text style={styles.hourText}>{hour}:00</Text>
+      <View style={styles.hourLine} />
     </View>
   );
 
@@ -77,11 +78,6 @@ export default function Calendar({ user, view, currentDate, darkMode, setEditEve
       <View style={styles.dayContainer}>
         <Text style={[styles.dayText, isToday && styles.todayText]}>{dayNumber}</Text>
         <View style={styles.dayEventsContainer}>
-          {Array.from({ length: 24 }, (_, i) => (
-            <View key={i} style={styles.hour}>
-              {renderHour(i)}
-            </View>
-          ))}
           {events.map(renderEvent)}
         </View>
       </View>
@@ -92,10 +88,10 @@ export default function Calendar({ user, view, currentDate, darkMode, setEditEve
     const dayNumber = day.getDate();
     const hasEvents = user?.events.some(event => new Date(event.date).toDateString() === day.toDateString());
     return (
-      <View style={styles.monthDayContainer}>
+      <TouchableOpacity onPress={() => setCurrentDate(day)} style={styles.monthDayContainer}>
         <Text style={styles.monthDayText}>{dayNumber}</Text>
         {hasEvents && <View style={styles.eventIndicator} />}
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -132,89 +128,73 @@ export default function Calendar({ user, view, currentDate, darkMode, setEditEve
   };
 
   const renderCalendar = () => {
-    switch (view) {
-      case 'day':
-        return (
-          <ScrollView style={styles.dayViewContainer}>
-            {renderDay(currentDate)}
-            {currentHourLine()}
-          </ScrollView>
-        );
-      case 'week':
-        return (
-          <>
-            <Text style={[styles.weekRangeText, darkMode && styles.darkText]}>
-              {getWeekDays(currentDate)[0].toDateString()} - {getWeekDays(currentDate)[6].toDateString()}
-            </Text>
-            <ScrollView horizontal style={styles.weekContainer} showsHorizontalScrollIndicator={false}>
-              <ScrollView style={styles.dayViewContainer} showsVerticalScrollIndicator={false}>
-                <View style={{ flexDirection: 'row', width: getWeekDays(currentDate).length * 100 }}>
-                  <View style={styles.hourColumn}>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <View key={i} style={styles.hour}>
-                        {renderHour(i)}
-                      </View>
-                    ))}
-                  </View>
-                  {getWeekDays(currentDate).map((day, index) => (
-                    <View key={day.toISOString()} style={[styles.dayWrapper, index < 6 && styles.verticalLine]}>
-                      {renderDay(day)}
-                    </View>
-                  ))}
-                  {currentHourLine()}
-                </View>
-              </ScrollView>
-            </ScrollView>
-          </>
-        );
-      case 'month':
-        return (
-          <>
-            <Text style={[styles.monthText, darkMode && styles.darkText]}>{getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}</Text>
-            <CalendarList
-              current={currentDate.toISOString().split('T')[0]}
-              pastScrollRange={12}
-              futureScrollRange={12}
-              scrollEnabled
-              showScrollIndicator
-              onDayPress={(day) => setCurrentDate(new Date(day.dateString))}
-              markedDates={user?.events.reduce((acc, event) => {
-                acc[event.date] = { marked: true };
-                return acc;
-              }, {} as Record<string, any>)}
-              theme={{
-                calendarBackground: darkMode ? '#1e1e1e' : '#fff',
-                textSectionTitleColor: darkMode ? '#fff' : '#000',
-                dayTextColor: darkMode ? '#fff' : '#000',
-                todayTextColor: '#ff6347',
-                selectedDayBackgroundColor: '#ff6347',
-                selectedDayTextColor: '#fff',
-                monthTextColor: darkMode ? '#fff' : '#000',
-                indicatorColor: darkMode ? '#fff' : '#000',
-              }}
-            />
-          </>
-        );
-      case 'year':
-        return (
-          <ScrollView style={styles.yearContainer}>
-            {Array.from({ length: 12 }, (_, i) => (
-              <View key={i} style={styles.monthWrapper}>
-                <Text style={[styles.monthText, darkMode && styles.darkText]}>{getMonthName(i)}</Text>
-                <View style={styles.monthContainer}>
-                  {getMonthDays(new Date(currentDate.getFullYear(), i)).map((day) => (
-                    <View key={day.toISOString()} style={styles.monthDayWrapper}>
-                      {renderMonthDay(day)}
-                    </View>
-                  ))}
-                </View>
+    const daysToRender = view === 'day' ? [currentDate] : getWeekDays(currentDate);
+    const dayWidth = screenWidth / daysToRender.length;
+
+    if (view === 'month') {
+      return (
+        <>
+          <Text style={[styles.monthText, darkMode && styles.darkText]}>{getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}</Text>
+          <View style={styles.monthContainer}>
+            {getMonthDays(currentDate).map((day) => (
+              <View key={day.toISOString()} style={styles.monthDayWrapper}>
+                {renderMonthDay(day)}
               </View>
             ))}
-          </ScrollView>
-        );
-      default:
-        return null;
+          </View>
+        </>
+      );
     }
+
+    if (view === 'year') {
+      return (
+        <ScrollView style={styles.yearContainer}>
+          {Array.from({ length: 12 }, (_, i) => (
+            <View key={i} style={styles.monthWrapper}>
+              <Text style={[styles.monthText, darkMode && styles.darkText]}>{getMonthName(i)}</Text>
+              <View style={styles.monthContainer}>
+                {getMonthDays(new Date(currentDate.getFullYear(), i)).map((day) => (
+                  <View key={day.toISOString()} style={styles.monthDayWrapper}>
+                    {renderMonthDay(day)}
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      );
+    }
+
+    return (
+      <>
+        {view === 'week' && (
+          <Text style={[styles.weekRangeText, darkMode && styles.darkText]}>
+            {daysToRender[0].toDateString()} - {daysToRender[daysToRender.length - 1].toDateString()}
+          </Text>
+        )}
+        <ScrollView horizontal style={styles.weekContainer} showsHorizontalScrollIndicator={false}>
+          <ScrollView style={styles.dayViewContainer} showsVerticalScrollIndicator={true}>
+            <View style={{ flexDirection: 'row', width: screenWidth }}>
+              <View style={styles.hourColumn}>
+                {Array.from({ length: 24 }, (_, i) => (
+                  <View key={i} style={styles.hour}>
+                    {renderHour(i)}
+                  </View>
+                ))}
+              </View>
+              <View style={{ flexDirection: 'row', width: screenWidth - 50 }}>
+                {daysToRender.map((day, index) => (
+                  <View key={day.toISOString()} style={[styles.dayWrapper, { width: dayWidth }, index < daysToRender.length - 1 && styles.verticalLine]}>
+                    {renderDay(day)}
+                  </View>
+                ))}
+                {currentHourLine()}
+              </View>
+            </View>
+          </ScrollView>
+        </ScrollView>
+      </>
+    );
   };
 
   return (

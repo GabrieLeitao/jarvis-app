@@ -89,7 +89,7 @@ export const styles = StyleSheet.create({
     width: 50,
   },
   dayWrapper: {
-    width: 100,
+    flex: 1,
   },
   dayContainer: {
     alignItems: 'center',
@@ -113,6 +113,18 @@ export const styles = StyleSheet.create({
   hourText: {
     fontSize: 14,
     color: '#888',
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    transform: [{ translateY: '-50%' }],
+  },
+  hourLine: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    position: 'absolute',
+    left: 50, // Align with hour column
+    right: 0,
+    top: '50%',
   },
   event: {
     position: 'absolute',
@@ -169,18 +181,18 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   userInfo: {
-    width: '100%',
-    padding: 20,
+    width: '30%',
+    padding: 5,
     backgroundColor: '#f0f0f0',
-    borderRadius: 10,
+    borderRadius: 5,
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
   },
   darkUserInfo: {
     backgroundColor: '#333',
   },
   userInfoText: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 14,
+    marginBottom: 5,
   },
   modalView: {
     margin: 20,
@@ -215,7 +227,7 @@ export const styles = StyleSheet.create({
   },
   currentHourLine: {
     position: 'absolute',
-    left: 0,
+    left: 50, // Align with hour column
     right: 0,
     height: 2,
     backgroundColor: 'red',

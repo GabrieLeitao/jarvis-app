@@ -5,7 +5,6 @@ import { Animated, Platform, Switch, Text, TouchableOpacity, View } from "react-
 import Calendar from './components/Calendar';
 import EventModal from './components/EventModal';
 import EventOptionsModal from './components/EventOptionsModal'; // Import EventOptionsModal
-import UserInfo from './components/UserInfo';
 import { styles } from './styles';
 
 interface Event {
@@ -35,6 +34,7 @@ export default function Index() {
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [slideAnim] = useState(new Animated.Value(300)); // Initial position off-screen
+  const [addEventAnim] = useState(new Animated.Value(300)); // Initial position off-screen for add event
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -134,6 +134,7 @@ export default function Index() {
           console.error('Error saving event:', error);
         }
       }
+      handleCloseAddEventModal();
     }
   };
 
@@ -166,7 +167,7 @@ export default function Index() {
     Animated.timing(slideAnim, {
       toValue: 0,
       duration: 300,
-      useNativeDriver: false, // Add useNativeDriver
+      useNativeDriver: false,
     }).start();
   };
 
@@ -174,10 +175,29 @@ export default function Index() {
     Animated.timing(slideAnim, {
       toValue: 300,
       duration: 300,
-      useNativeDriver: false, // Add useNativeDriver
+      useNativeDriver: false,
     }).start(() => {
       setOptionsModalVisible(false);
       setSelectedEvent(null);
+    });
+  };
+
+  const handleAddEventPress = () => {
+    setModalVisible(true);
+    Animated.timing(addEventAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleCloseAddEventModal = () => {
+    Animated.timing(addEventAnim, {
+      toValue: 300,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      setModalVisible(false);
     });
   };
 
@@ -214,7 +234,7 @@ export default function Index() {
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity style={[styles.addButton, darkMode && styles.darkButton, { marginTop: 10 }]} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={[styles.addButton, darkMode && styles.darkButton, { marginTop: 10 }]} onPress={handleAddEventPress}>
         <Text style={styles.buttonText}>Add Event</Text>
       </TouchableOpacity>
       <Calendar
@@ -225,14 +245,15 @@ export default function Index() {
         setEditEvent={setEditEvent}
         handleEventPress={handleEventPress}
       />
-      <UserInfo user={user} darkMode={darkMode} />
-      <EventModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleSaveEvent}
-        event={editEvent}
-        darkMode={darkMode}
-      />
+      <Animated.View style={[styles.optionsModal, { transform: [{ translateX: addEventAnim }] }]}>
+        <EventModal
+          visible={modalVisible}
+          onClose={handleCloseAddEventModal}
+          onSave={handleSaveEvent}
+          event={editEvent}
+          darkMode={darkMode}
+        />
+      </Animated.View>
       {selectedEvent && (
         <Animated.View style={[styles.optionsModal, { transform: [{ translateX: slideAnim }] }]}>
           <EventOptionsModal

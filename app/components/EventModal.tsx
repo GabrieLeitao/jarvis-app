@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
-import { Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles';
 
 interface Event {
@@ -108,59 +108,54 @@ export default function EventModal({ visible, onClose, onSave, event, darkMode }
     onClose();
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={[styles.modalView, darkMode && styles.darkModalView]}>
-        <Text style={[styles.modalText, darkMode && styles.darkText]}>{event ? 'Edit Event' : 'Add New Event'}</Text>
-        <TextInput
-          style={[styles.input, darkMode && styles.darkInput]}
-          placeholder="Title"
-          placeholderTextColor={darkMode ? "#ccc" : "#888"}
-          value={title}
-          onChangeText={setTitle}
-        />
-        <Text style={[styles.label, darkMode && styles.darkText]}>Date:</Text>
-        {renderDateTimePicker(date, setDate, 'date')}
-        <Text style={[styles.label, darkMode && styles.darkText]}>Start Time:</Text>
-        {renderDateTimePicker(startTime, setStartTime, 'time')}
-        <Text style={[styles.label, darkMode && styles.darkText]}>End Time:</Text>
-        {renderDateTimePicker(endTime, setEndTime, 'time')}
-        <Text style={[styles.label, darkMode && styles.darkText]}>Reminder:</Text>
-        <Picker
-          selectedValue={reminder}
-          style={[styles.picker, darkMode && styles.darkPicker]}
-          onValueChange={(itemValue) => setReminder(itemValue)}
-        >
-          <Picker.Item label="10 minutes before" value="10 minutes before" />
-          <Picker.Item label="30 minutes before" value="30 minutes before" />
-          <Picker.Item label="1 hour before" value="1 hour before" />
-          <Picker.Item label="1 day before" value="1 day before" />
-        </Picker>
-        <Text style={[styles.label, darkMode && styles.darkText]}>Recurring:</Text>
-        <Picker
-          selectedValue={recurring}
-          style={[styles.picker, darkMode && styles.darkPicker]}
-          onValueChange={(itemValue) => setRecurring(itemValue)}
-        >
-          <Picker.Item label="None" value="None" />
-          <Picker.Item label="Daily" value="Daily" />
-          <Picker.Item label="Weekly" value="Weekly" />
-          <Picker.Item label="Monthly" value="Monthly" />
-        </Picker>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={onClose}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
+    <View style={[styles.optionsModalView, darkMode && styles.darkOptionsModalView]}>
+      <Text style={[styles.modalText, darkMode && styles.darkText]}>{event ? 'Edit Event' : 'Add New Event'}</Text>
+      <TextInput
+        style={[styles.input, darkMode && styles.darkInput]}
+        placeholder="Title"
+        placeholderTextColor={darkMode ? "#ccc" : "#888"}
+        value={title}
+        onChangeText={setTitle}
+      />
+      <Text style={[styles.label, darkMode && styles.darkText]}>Date:</Text>
+      {renderDateTimePicker(date, setDate, 'date')}
+      <Text style={[styles.label, darkMode && styles.darkText]}>Start Time:</Text>
+      {renderDateTimePicker(startTime, setStartTime, 'time')}
+      <Text style={[styles.label, darkMode && styles.darkText]}>End Time:</Text>
+      {renderDateTimePicker(endTime, setEndTime, 'time')}
+      <Text style={[styles.label, darkMode && styles.darkText]}>Reminder:</Text>
+      <Picker
+        selectedValue={reminder}
+        style={[styles.picker, darkMode && styles.darkPicker]}
+        onValueChange={(itemValue) => setReminder(itemValue)}
+      >
+        <Picker.Item label="10 minutes before" value="10 minutes before" />
+        <Picker.Item label="30 minutes before" value="30 minutes before" />
+        <Picker.Item label="1 hour before" value="1 hour before" />
+        <Picker.Item label="1 day before" value="1 day before" />
+      </Picker>
+      <Text style={[styles.label, darkMode && styles.darkText]}>Recurring:</Text>
+      <Picker
+        selectedValue={recurring}
+        style={[styles.picker, darkMode && styles.darkPicker]}
+        onValueChange={(itemValue) => setRecurring(itemValue)}
+      >
+        <Picker.Item label="None" value="None" />
+        <Picker.Item label="Daily" value="Daily" />
+        <Picker.Item label="Weekly" value="Weekly" />
+        <Picker.Item label="Monthly" value="Monthly" />
+      </Picker>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={onClose}>
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </View>
   );
 }
