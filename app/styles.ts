@@ -35,6 +35,15 @@ export const styles = StyleSheet.create({
   darkPicker: {
     color: '#fff',
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  darkPickerContainer: {
+    borderColor: '#555',
+  },
   navigation: {
     flexDirection: 'row',
   },
@@ -59,30 +68,36 @@ export const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginVertical: 10,
-    alignSelf: 'center',
-    width: '50%',
+    alignSelf: 'flex-end',
+    width: '10%',
     alignItems: 'center',
   },
   weekRangeText: {
     fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 10,
+    textAlign: 'left',
+    marginBottom: 15,
   },
   darkText: {
     color: '#fff',
   },
   weekContainer: {
-    marginBottom: 20,
+    marginBottom: 0,
     flexDirection: 'row',
+    width: '100%',
+  },
+  hourColumn: {
+    width: 50,
   },
   dayWrapper: {
     width: 100,
   },
   dayContainer: {
     alignItems: 'center',
+    width: '100%',
   },
   dayText: {
     fontSize: 18,
+    textAlign: 'left',
     marginBottom: 10,
   },
   todayText: {
@@ -91,7 +106,7 @@ export const styles = StyleSheet.create({
   hour: {
     height: 50,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -100,6 +115,9 @@ export const styles = StyleSheet.create({
     color: '#888',
   },
   event: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     backgroundColor: '#ff6347',
     borderRadius: 5,
     padding: 5,
@@ -111,6 +129,11 @@ export const styles = StyleSheet.create({
   },
   dayViewContainer: {
     flex: 1,
+  },
+  dayEventsContainer: {
+    position: 'relative',
+    flex: 1,
+    width: '100%',
   },
   monthContainer: {
     flexDirection: 'row',
@@ -196,6 +219,7 @@ export const styles = StyleSheet.create({
     right: 0,
     height: 2,
     backgroundColor: 'red',
+    zIndex: 1,
   },
   timePicker: {
     width: '100%',
@@ -206,6 +230,79 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
     width: '100%',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  verticalLine: {
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
+  },
+  clockContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    zIndex: 1,
+  },
+  darkClockContainer: {
+    backgroundColor: '#333',
+  },
+  clockText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  darkClockText: {
+    color: '#fff',
+  },
+  navButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  darkNavButton: {
+    backgroundColor: '#0056b3',
+  },
+  viewButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  darkViewButton: {
+    backgroundColor: '#0056b3',
+  },
+  viewButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  optionsModal: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 300,
+    backgroundColor: '#fff',
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+    elevation: 5,
+    zIndex: 2,
+  },
+  darkOptionsModal: {
+    backgroundColor: '#333',
+  },
+  optionsModalView: {
+    flex: 1,
+    padding: 20,
+  },
+  darkOptionsModalView: {
+    backgroundColor: '#333',
   },
 });
 

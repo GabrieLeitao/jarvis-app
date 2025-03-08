@@ -1,9 +1,10 @@
 import { Picker } from '@react-native-picker/picker';
 import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from "react";
-import { Switch, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, Switch, Text, TouchableOpacity, View } from "react-native";
 import Calendar from './components/Calendar';
 import EventModal from './components/EventModal';
+import EventOptionsModal from './components/EventOptionsModal'; // Import EventOptionsModal
 import UserInfo from './components/UserInfo';
 import { styles } from './styles';
 
@@ -31,15 +32,39 @@ export default function Index() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editEvent, setEditEvent] = useState<Event | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [slideAnim] = useState(new Animated.Value(300)); // Initial position off-screen
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
-      try {
-        const userData = await FileSystem.readAsStringAsync(fileUri);
-        setUser(JSON.parse(userData) as User);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+      if (Platform.OS === 'web') {
+        // Handle web-specific logic
+        try {
+          const userData = localStorage.getItem('userInfo');
+          if (userData) {
+            setUser(JSON.parse(userData) as User);
+          } else {
+            console.warn('userInfo not found in localStorage, initializing with empty user data.');
+            setUser({ name: '', email: '', birthdate: '', events: [] });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        // Handle native-specific logic
+        const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+        try {
+          const userData = await FileSystem.readAsStringAsync(fileUri);
+          setUser(JSON.parse(userData) as User);
+        } catch (error) {
+          if ((error as any).code === 'E_FILE_NOT_FOUND') {
+            console.warn('userInfo.json not found, initializing with empty user data.');
+            setUser({ name: '', email: '', birthdate: '', events: [] });
+          } else {
+            console.error('Error fetching user data:', error);
+          }
+        }
       }
     };
 
@@ -97,11 +122,17 @@ export default function Index() {
       setEditEvent(null);
 
       // Save to JSON file
-      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
-      try {
-        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
-      } catch (error) {
-        console.error('Error saving event:', error);
+      if (Platform.OS === 'web') {
+        // Handle web-specific logic
+        localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+      } else {
+        // Handle native-specific logic
+        const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+        try {
+          await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
+        } catch (error) {
+          console.error('Error saving event:', error);
+        }
       }
     }
   };
@@ -113,13 +144,41 @@ export default function Index() {
       setUser(updatedUser);
 
       // Save to JSON file
-      const fileUri = FileSystem.documentDirectory + 'userInfo.json';
-      try {
-        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
-      } catch (error) {
-        console.error('Error deleting event:', error);
+      if (Platform.OS === 'web') {
+        // Handle web-specific logic
+        localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+      } else {
+        // Handle native-specific logic
+        const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+        try {
+          await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser));
+        } catch (error) {
+          console.error('Error deleting event:', error);
+        }
       }
+      handleCloseOptionsModal();
     }
+  };
+
+  const handleEventPress = (event: Event) => {
+    setSelectedEvent(event);
+    setOptionsModalVisible(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false, // Add useNativeDriver
+    }).start();
+  };
+
+  const handleCloseOptionsModal = () => {
+    Animated.timing(slideAnim, {
+      toValue: 300,
+      duration: 300,
+      useNativeDriver: false, // Add useNativeDriver
+    }).start(() => {
+      setOptionsModalVisible(false);
+      setSelectedEvent(null);
+    });
   };
 
   return (
@@ -134,21 +193,23 @@ export default function Index() {
         />
       </View>
       <View style={styles.controls}>
-        <Picker
-          selectedValue={view}
-          style={[styles.picker, darkMode && styles.darkPicker]}
-          onValueChange={(itemValue) => setView(itemValue)}
-        >
-          <Picker.Item label="Day" value="day" />
-          <Picker.Item label="Week" value="week" />
-          <Picker.Item label="Month" value="month" />
-          <Picker.Item label="Year" value="year" />
-        </Picker>
+        <View style={[styles.pickerContainer, darkMode && styles.darkPickerContainer]}>
+          <Picker
+            selectedValue={view}
+            style={[styles.picker, darkMode && styles.darkPicker]}
+            onValueChange={(itemValue) => setView(itemValue)}
+          >
+            <Picker.Item label="Day" value="day" />
+            <Picker.Item label="Week" value="week" />
+            <Picker.Item label="Month" value="month" />
+            <Picker.Item label="Year" value="year" />
+          </Picker>
+        </View>
         <View style={styles.navigation}>
-          <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={handlePrevious}>
+          <TouchableOpacity style={[styles.navButton, darkMode && styles.darkNavButton]} onPress={handlePrevious}>
             <Text style={styles.buttonText}>{"<"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, darkMode && styles.darkButton]} onPress={handleNext}>
+          <TouchableOpacity style={[styles.navButton, darkMode && styles.darkNavButton]} onPress={handleNext}>
             <Text style={styles.buttonText}>{">"}</Text>
           </TouchableOpacity>
         </View>
@@ -162,7 +223,7 @@ export default function Index() {
         currentDate={currentDate}
         darkMode={darkMode}
         setEditEvent={setEditEvent}
-        handleDeleteEvent={handleDeleteEvent}
+        handleEventPress={handleEventPress}
       />
       <UserInfo user={user} darkMode={darkMode} />
       <EventModal
@@ -172,6 +233,17 @@ export default function Index() {
         event={editEvent}
         darkMode={darkMode}
       />
+      {selectedEvent && (
+        <Animated.View style={[styles.optionsModal, { transform: [{ translateX: slideAnim }] }]}>
+          <EventOptionsModal
+            visible={optionsModalVisible}
+            onClose={handleCloseOptionsModal}
+            event={selectedEvent}
+            onDelete={handleDeleteEvent}
+            darkMode={darkMode}
+          />
+        </Animated.View>
+      )}
     </View>
   );
 }

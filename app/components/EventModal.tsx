@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
-import { Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles';
 
 interface Event {
@@ -59,6 +59,33 @@ const TimePicker = ({ value, onChange }: { value: Date; onChange: (date: Date) =
   );
 };
 
+const renderDateTimePicker = (value: Date, onChange: (date: Date) => void, mode: 'date' | 'time') => {
+  if (Platform.OS === 'web') {
+    const formattedValue = mode === 'date' ? value.toISOString().split('T')[0] : value.toTimeString().split(' ')[0].substring(0, 5);
+    return (
+      <input
+        type={mode === 'date' ? 'date' : 'time'}
+        value={formattedValue}
+        onChange={(e) => {
+          const newValue = mode === 'date' ? new Date(e.target.value) : new Date(value.toDateString() + ' ' + e.target.value);
+          onChange(newValue);
+        }}
+        style={{ width: '100%', padding: 10, marginBottom: 10 }}
+      />
+    );
+  } else {
+    return (
+      <DateTimePicker
+        style={styles.timePicker}
+        value={value}
+        mode={mode}
+        display="default"
+        onChange={(event, selectedDate) => onChange(selectedDate || value)}
+      />
+    );
+  }
+};
+
 export default function EventModal({ visible, onClose, onSave, event, darkMode }: EventModalProps) {
   const [title, setTitle] = useState(event?.title || '');
   const [date, setDate] = useState(new Date(event?.date || Date.now()));
@@ -97,19 +124,13 @@ export default function EventModal({ visible, onClose, onSave, event, darkMode }
           value={title}
           onChangeText={setTitle}
         />
-        <Text style={[styles.input, darkMode && styles.darkInput]}>Date:</Text>
-        <DateTimePicker
-          style={styles.timePicker}
-          value={date}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => setDate(selectedDate || date)}
-        />
-        <Text style={[styles.input, darkMode && styles.darkInput]}>Start Time:</Text>
-        <TimePicker value={startTime} onChange={setStartTime} />
-        <Text style={[styles.input, darkMode && styles.darkInput]}>End Time:</Text>
-        <TimePicker value={endTime} onChange={setEndTime} />
-        <Text style={[styles.input, darkMode && styles.darkInput]}>Reminder:</Text>
+        <Text style={[styles.label, darkMode && styles.darkText]}>Date:</Text>
+        {renderDateTimePicker(date, setDate, 'date')}
+        <Text style={[styles.label, darkMode && styles.darkText]}>Start Time:</Text>
+        {renderDateTimePicker(startTime, setStartTime, 'time')}
+        <Text style={[styles.label, darkMode && styles.darkText]}>End Time:</Text>
+        {renderDateTimePicker(endTime, setEndTime, 'time')}
+        <Text style={[styles.label, darkMode && styles.darkText]}>Reminder:</Text>
         <Picker
           selectedValue={reminder}
           style={[styles.picker, darkMode && styles.darkPicker]}
@@ -120,7 +141,7 @@ export default function EventModal({ visible, onClose, onSave, event, darkMode }
           <Picker.Item label="1 hour before" value="1 hour before" />
           <Picker.Item label="1 day before" value="1 day before" />
         </Picker>
-        <Text style={[styles.input, darkMode && styles.darkInput]}>Recurring:</Text>
+        <Text style={[styles.label, darkMode && styles.darkText]}>Recurring:</Text>
         <Picker
           selectedValue={recurring}
           style={[styles.picker, darkMode && styles.darkPicker]}
