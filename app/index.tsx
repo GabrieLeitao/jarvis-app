@@ -5,6 +5,7 @@ import { Animated, Platform, Switch, Text, TouchableOpacity, View } from "react-
 import Calendar from './components/Calendar';
 import EventModal from './components/EventModal';
 import EventOptionsModal from './components/EventOptionsModal'; // Import EventOptionsModal
+import IndexVoiceControl from './components/IndexVoiceControl';
 import { styles } from './styles';
 
 interface Event {
@@ -35,6 +36,7 @@ export default function Index() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [slideAnim] = useState(new Animated.Value(300)); // Initial position off-screen
   const [addEventAnim] = useState(new Animated.Value(300)); // Initial position off-screen for add event
+  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -245,6 +247,7 @@ export default function Index() {
         setEditEvent={setEditEvent}
         handleEventPress={handleEventPress}
       />
+      <IndexVoiceControl darkMode={darkMode} />
       <Animated.View style={[styles.optionsModal, { transform: [{ translateX: addEventAnim }] }]}>
         <EventModal
           visible={modalVisible}
