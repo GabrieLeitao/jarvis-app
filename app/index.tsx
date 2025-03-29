@@ -36,7 +36,6 @@ export default function Index() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [slideAnim] = useState(new Animated.Value(300)); // Initial position off-screen
   const [addEventAnim] = useState(new Animated.Value(300)); // Initial position off-screen for add event
-  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -203,6 +202,36 @@ export default function Index() {
     });
   };
 
+  const handleAddEvent = (eventName: string, date: Date) => {
+    console.log(`Evento "${eventName}" adicionado para ${date.toISOString()}`); // Log the event being added
+    if (user) {
+      const newEvent = {
+        id: Date.now(),
+        title: eventName,
+        date: date.toISOString().split('T')[0],
+        startTime: '00:00',
+        endTime: '23:59',
+        reminder: 'none',
+        recurring: 'none',
+      };
+      const updatedUser = {
+        ...user,
+        events: [...user.events, newEvent],
+      };
+      setUser(updatedUser);
+
+      // Save to JSON file
+      if (Platform.OS === 'web') {
+        localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+      } else {
+        const fileUri = FileSystem.documentDirectory + 'userInfo.json';
+        FileSystem.writeAsStringAsync(fileUri, JSON.stringify(updatedUser)).catch((error) =>
+          console.error('Error saving event:', error)
+        );
+      }
+    }
+  };
+
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       <View style={styles.header}>
@@ -213,6 +242,12 @@ export default function Index() {
           thumbColor={darkMode ? "#f5dd4b" : "#f4f3f4"}
           trackColor={{ false: "#767577", true: "#81b0ff" }}
         />
+      </View>
+      {/* Add year display */}
+      <View style={{ alignItems: 'flex-start', marginVertical: 10 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: darkMode ? '#fff' : '#000' }}>
+          {currentDate.getFullYear()}
+        </Text>
       </View>
       <View style={styles.controls}>
         <View style={[styles.pickerContainer, darkMode && styles.darkPickerContainer]}>
@@ -247,7 +282,16 @@ export default function Index() {
         setEditEvent={setEditEvent}
         handleEventPress={handleEventPress}
       />
-      <IndexVoiceControl darkMode={darkMode} />
+      <IndexVoiceControl
+        darkMode={darkMode}
+        onNavigate={(view, date) => {
+          setView(view);
+          setCurrentDate(date);
+        }}
+        onAddEvent={(eventName, date) => {
+          handleAddEvent(eventName, date); // Reutiliza a lógica existente para adicionar eventos
+        }}
+      />
       <Animated.View style={[styles.optionsModal, { transform: [{ translateX: addEventAnim }] }]}>
         <EventModal
           visible={modalVisible}
